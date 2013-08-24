@@ -82,6 +82,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Packages\Rx.2.1.30214.0\System.Reactive.Linq.dll</HintPath>
     </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\Packages\Rx.2.1.30214.0\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reactive.Providers, Version=1.0.10621.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Packages\Rx.2.1.30214.0\System.Reactive.Providers.dll</HintPath>
