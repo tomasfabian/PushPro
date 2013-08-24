@@ -2,8 +2,8 @@ PushPro
 =====================
 
 PushPro is a library for push notifications that can be filtered and paged on the server side.
-It is based on ASP.NET SignalR self hosting and hub connections. The query operators
-are based on ASP.NET WEB API OData.
+It is based on ASP.NET SignalR self hosting and hub connections. The OData query operators
+are generated and parsed with the help of ASP.NET WEB API OData.
 
 Push your notifications from the server:
 
@@ -52,7 +52,7 @@ performed on the server side.
         }
 
 The book with an Id of 5 and the first pushed book will never be sent to this client
-and it will receive only the maximum specified number (7) of book notifications:
+and it will receive only the maximum specified number (7) of book notifications.
 
  
 

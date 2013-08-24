@@ -32,7 +32,7 @@ namespace Example.PushPro.Server.SignalR.Hubs
                 int booksCount = this.repository.Books.Count();
 
                 return Observable.Interval(TimeSpan.FromSeconds(1))
-                                 .Select((i) => repository.Books.FirstOrDefault(b => b.Id == i))
+                                 .Select(i => repository.Books.FirstOrDefault(b => b.Id == i))
                                  .Where(c => c != null)
                                  .Take(booksCount)
                                  .AsQbservable();
