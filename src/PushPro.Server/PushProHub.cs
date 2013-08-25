@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Reactive;
@@ -36,20 +37,44 @@ namespace PushPro.Server
             Clients.Client(connectionId).pushMessage(item);
         }
 
+        protected virtual IQueryable<TEntity> StartWith
+        {
+            get
+            {
+                return Enumerable.Empty<TEntity>().AsQueryable();
+            }
+        }
+
         protected abstract IQbservable<TEntity> Source { get; }
 
         private static readonly ConcurrentDictionary<string, IDisposable> Subscriptions = new ConcurrentDictionary<string, IDisposable>();
 
         #region GetModel
 
+        private IEdmModel edmModel;
+
         protected virtual IEdmModel GetModel()
         {
+            if (edmModel != null)
+            {
+                return edmModel;
+            }
+
             var modelBuilder = new ODataConventionModelBuilder();
 
-            string name = typeof (TEntity).Name.ToLower() + "s";
+            string name = typeof(TEntity).Name.ToLower() + "s";
             modelBuilder.EntitySet<TEntity>(name);
 
             return modelBuilder.GetEdmModel();
+        }
+
+        #endregion
+
+        #region ClearEdmModel
+
+        private void ClearEdmModel()
+        {
+            this.edmModel = null;
         }
 
         #endregion
@@ -67,18 +92,7 @@ namespace PushPro.Server
                     return;
                 }
 
-                var queryOptions =
-                    new ODataQueryOptions(
-                        new ODataQueryContext(this.GetModel(), typeof (TEntity)),
-                        new HttpRequestMessage(HttpMethod.Get, Context.Request.Url));
-
-                var querySettings = new ODataQuerySettings
-                {
-                    EnsureStableOrdering = false
-                };
-
-                var source =
-                    queryOptions.ApplyTo(this.Source.ToQueryable(), querySettings) as IQueryable<TEntity>;
+                var source = this.ApplyQueryOptionsTo(this.Source.ToQueryable());
 
                 var observer = CreateObserver(connectionId);
 
@@ -89,11 +103,35 @@ namespace PushPro.Server
                     .Subscribe(observer);
 
                 Subscriptions.TryAdd(connectionId, subscription);
+
+                this.ClearEdmModel();
             });
         }
 
         #endregion
-        
+
+        #region ApplyQueryOptionsTo
+
+        protected IEnumerable<TEntity> ApplyQueryOptionsTo(IQueryable<TEntity> queryable)
+        {
+            var queryOptions =
+                new ODataQueryOptions(
+                    new ODataQueryContext(this.GetModel(), typeof (TEntity)),
+                    new HttpRequestMessage(HttpMethod.Get, Context.Request.Url));
+
+            var querySettings = new ODataQuerySettings
+                                    {
+                                        EnsureStableOrdering = false
+                                    };
+
+            var source =
+                queryOptions.ApplyTo(queryable, querySettings) as IQueryable<TEntity>;
+
+            return source;
+        }
+
+        #endregion
+
         #region CreateObserver
 
         private IObserver<PushPro.Client.Notification<TEntity>> CreateObserver(string clientId)
@@ -107,7 +145,7 @@ namespace PushPro.Server
             {
             });
         }
-	
+
         #endregion
 
         #region OnDisconnected
