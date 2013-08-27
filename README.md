@@ -6,30 +6,22 @@ It is based on ASP.NET SignalR self hosting and hub connections. The OData query
 are generated and parsed with the help of ASP.NET WEB API OData.
 
 Push your notifications from the server:
-
-    public class BooksHub : PushProHub<Book>
-    {
-        private readonly Repository repository;
-
-        public BooksHub()
-        {
-            this.repository = new Repository();
-        }
-        
+   
         protected override IQbservable<Book> Source
         {
             get
             {
-                int booksCount = this.repository.Books.Count();
+                var queryDatabase = this.ApplyQueryOptionsTo(this.BooksManager.All());
 
-                return Observable.Interval(TimeSpan.FromSeconds(1))
-                                 .Select((i) => repository.Books.FirstOrDefault(b => b.Id == i))
-                                 .Where(c => c != null)
-                                 .Take(booksCount)
-                                 .AsQbservable();
+                var addedEntities = this.EntityChangeNotifier.ChangeNotifications
+                    .Where(c => c.EntityChangeType == EntityChangeType.Added)
+                    .Select(c => c.Entity);
+
+                return addedEntities
+                    .StartWith(queryDatabase)
+                    .AsQbservable();
             }
         }
-    }
 
 and observe them on the client side. The filter (Where), skip and top (Take) operators are
 performed on the server side.
